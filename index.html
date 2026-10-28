@@ -1,0 +1,173 @@
+﻿<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#edf4ee">
+  <meta name="description" content="Aplikasi dzikir pagi dan petang dengan panduan bacaan, hitungan, dan rekap mingguan.">
+  <title>Wird — Dzikir Pagi &amp; Petang</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body x-data="wirdApp()" x-init="init()" :data-theme="theme" class="min-h-screen">
+  <div class="loading-screen" x-show="loading" x-transition:leave="loading-leave" x-transition:leave-start="loading-leave-start" x-transition:leave-end="loading-leave-end" role="status" aria-live="polite" aria-label="Memuat Wird">
+    <div class="loader-glow loader-glow-one"></div><div class="loader-glow loader-glow-two"></div>
+    <div class="loader-content">
+      <div class="loader-emblem"><span>و</span><i></i></div>
+      <p class="loader-kicker">DZIKIR HARIAN</p>
+      <h1 class="loader-title">wird<span>.</span></h1>
+      <p class="loader-caption">Menyiapkan ruang tenang untuk berdzikir</p>
+      <div class="loader-progress"><span></span></div>
+      <div class="loader-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+    </div>
+  </div>
+  <main x-show="!username" x-cloak class="login-screen min-h-screen px-4 py-10">
+    <form @submit.prevent="login()" class="paper login-card mx-auto rounded-[28px] p-7 sm:p-10">
+      <span class="grid h-12 w-12 place-items-center rounded-2xl accent-bg text-xl text-white">و</span>
+      <p class="accent mt-7 text-xs font-bold uppercase tracking-[.2em]">Dzikir harian</p>
+      <h1 class="mt-2 text-3xl font-semibold">Selamat datang di Wird.</h1>
+      <p class="muted mt-3 text-sm leading-6">Masukkan nama pengguna untuk membuka dashboard dan menyimpan progres di perangkat ini.</p>
+      <label for="username" class="mt-7 block text-sm font-semibold">Nama pengguna</label>
+      <input id="username" x-model.trim="usernameInput" maxlength="32" required autocomplete="username" placeholder="Contoh: Ahmad" class="username-input mt-2 w-full rounded-xl px-4 py-3 outline-none">
+      <button class="accent-bg mt-4 w-full rounded-xl px-4 py-3 font-semibold text-white">Masuk</button>
+      <p class="muted mt-4 text-xs leading-5">Login ini hanya menyimpan nama di browser ini; tidak ada akun atau kata sandi.</p>
+    </form>
+  </main>
+  <div class="min-h-screen px-4 py-5 sm:px-7 sm:py-8 lg:px-10">
+    <div x-show="username" x-cloak class="mx-auto max-w-6xl">
+      <header class="mb-7 flex flex-wrap items-center justify-between gap-4">
+        <a href="#utama" @click.prevent="tab='dashboard'" class="flex items-center gap-3 no-underline" aria-label="Wird, ke dashboard">
+          <span class="grid h-11 w-11 place-items-center rounded-2xl accent-bg text-xl text-white">و</span>
+          <span><span class="block text-lg font-bold tracking-tight">wird<span class="accent">.</span></span><span class="muted block text-[11px] tracking-[.16em]">DZIKIR HARIAN</span></span>
+        </a>
+        <div class="flex items-center gap-2">
+          <button x-show="tab!=='dashboard'" @click="tab='dashboard'" class="paper rounded-xl border px-3.5 py-2.5 text-sm font-semibold" style="border-color:var(--line)">Dashboard</button>
+          <button type="button" @click="toggleTheme()" class="theme-toggle rounded-xl border px-3.5 py-2.5 text-sm font-semibold transition" style="border-color:var(--line)" :aria-label="theme==='dark'?'Aktifkan tema terang':'Aktifkan mode gelap'"><span x-text="theme==='dark'?'☀ Terang':'☾ Gelap'"></span></button>
+          <button @click="tab=tab==='report'?'dashboard':'report'" class="rounded-xl border px-4 py-2.5 text-sm font-semibold transition hover:opacity-80" :class="tab==='report'?'accent-bg border-transparent text-white':'paper line'">
+            <span x-text="tab==='report'?'Dashboard':'Rekap pekan'"></span>
+          </button>
+          <button @click="logout()" class="rounded-xl border px-3.5 py-2.5 text-sm font-semibold muted" style="border-color:var(--line)">Keluar</button>
+        </div>
+      </header>
+
+      <main x-show="tab==='dashboard'" x-cloak x-transition.opacity>
+        <section class="mb-7">
+          <p class="accent mb-2 text-xs font-bold uppercase tracking-[.2em]">Dashboard Wird</p>
+          <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">Assalamu’alaikum, <span x-text="username"></span>.</h1>
+          <p class="muted mt-3 max-w-xl text-sm leading-6">Pilih kumpulan dzikir untuk mulai membaca. Progres tersimpan secara lokal di perangkat ini.</p>
+        </section>
+        <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <template x-for="collection in collections" :key="collection.key">
+            <button @click="openCollection(collection.key)" class="paper collection-card collection-photo rounded-[24px] p-5 text-left transition hover:-translate-y-1" :class="'collection-' + collection.key">
+              <span class="soft grid h-11 w-11 place-items-center rounded-2xl text-xl accent" x-text="collection.icon"></span>
+              <span class="mt-4 block font-semibold" x-text="collection.title"></span>
+              <span class="muted mt-1 block text-xs leading-5" x-text="collection.description"></span>
+              <span class="accent mt-4 block text-xs font-bold" x-text="`${collectionCount(collection.key)} bacaan · Buka →`"></span>
+            </button>
+          </template>
+        </section>
+        <section class="paper mt-5 flex flex-wrap items-center justify-between gap-4 rounded-2xl p-5">
+          <div><p class="text-sm font-semibold">Ringkasan hari ini</p><p class="muted mt-1 text-xs" x-text="`${doneCount()}/${dailyCardCount()} bacaan tuntas · ${todayPoints()} poin`"></p></div>
+          <button @click="tab='report'" class="accent-bg rounded-xl px-4 py-2.5 text-sm font-semibold text-white">Lihat rekap pekan</button>
+        </section>
+      </main>
+
+      <main x-show="tab==='read'" x-cloak>
+        <section class="mb-6 grid gap-5 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <p class="accent mb-2 text-xs font-bold uppercase tracking-[.2em]" x-text="activeCollection().title"></p>
+            <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">Tenangkan hati,<br class="sm:hidden"> ingat kepada Allah.</h1>
+            <p class="muted mt-3 max-w-xl text-sm leading-6">Baca dzikir yang dituntunkan, satu lembar dalam satu waktu. Semoga menjadi sebab terjaganya hati dan bertambahnya syukur.</p>
+          </div>
+          <button @click="tab='dashboard'" class="paper rounded-xl border px-4 py-2.5 text-sm font-semibold" style="border-color:var(--line)">← Semua kumpulan</button>
+        </section>
+
+        <section x-show="period==='morning'||period==='evening'" class="soft mb-5 flex gap-3 rounded-2xl border p-4 sm:items-center" style="border-color:var(--line)">
+          <span class="grid h-9 w-9 shrink-0 place-items-center rounded-xl paper accent">◷</span>
+          <div class="text-sm leading-6"><strong x-text="period==='morning'?'Waktu pagi':'Waktu petang'"></strong><span class="muted"> · </span><span x-text="period==='morning'?'Sejak masuk waktu Subuh hingga matahari terbit; jika terlewat, baca saat ingat.':'Sejak setelah Asar hingga matahari terbenam; jika terlewat, baca saat ingat.'"></span><span class="muted"> Keterangan waktu ini panduan umum, bukan batas gugurnya dzikir.</span></div>
+        </section>
+
+        <section class="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_250px]">
+          <div class="paper page-stage relative overflow-hidden rounded-[28px] p-5 sm:p-8 lg:p-10" :class="{'wake-card':period==='wake','sleep-card':period==='sleep','after-prayer-card':period==='afterPrayer','evening-card':period==='evening','morning-card':period==='morning'}" aria-label="Kartu dzikir">
+            <div class="mb-5 flex items-center justify-between gap-3">
+              <div><p class="accent text-xs font-bold uppercase tracking-[.18em]" x-text="activeCollection().title"></p><p class="muted mt-1 text-xs" x-text="`Dzikir ${index+1} dari ${list.length}`"></p></div>
+              <span class="soft rounded-full px-3 py-1.5 text-xs font-semibold" x-text="`Baca ${current().target}×`"></span>
+            </div>
+            <article :key="period+'-'+index+'-'+slideDirection" class="page-enter relative z-10" :class="slideDirection==='next'?'page-next':'page-prev'">
+              <p class="arabic mb-5 text-right text-[2rem] sm:text-[2.6rem]" x-text="current().arabic" lang="ar"></p>
+              <p class="mb-4 text-sm italic leading-7 muted" x-text="current().latin"></p>
+              <div class="line mb-4 border-t"></div>
+              <p class="text-[15px] leading-7" x-text="current().meaning"></p>
+              <div class="soft mt-5 rounded-2xl p-4">
+                <p class="accent mb-1 text-[11px] font-bold uppercase tracking-[.16em]">Keutamaan / keterangan</p>
+                <p class="muted text-sm leading-6" x-text="current().virtue"></p>
+              </div>
+              <p class="muted mt-4 text-xs leading-5"><span class="font-bold">Rujukan:</span> <span x-text="current().ref"></span></p>
+            </article>
+            <div class="line my-6 border-t"></div>
+            <div class="flex flex-wrap items-center justify-between gap-4">
+              <div class="min-w-36 flex-1 sm:max-w-xs">
+                <div class="mb-2 flex justify-between text-xs"><span class="muted">Progres bacaan</span><span class="font-semibold" x-text="`${countForCurrent()} / ${current().target}`"></span></div>
+                <div class="progress-track h-2 overflow-hidden rounded-full"><div class="progress-fill h-full rounded-full" :style="`width:${Math.min(100,countForCurrent()/current().target*100)}%`"></div></div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button @click="resetCount()" class="rounded-xl border px-3.5 py-2.5 text-sm font-semibold muted transition hover:opacity-70" style="border-color:var(--line)" aria-label="Reset hitungan">Reset</button>
+                <button @click="tap()" class="tap-button flex min-w-36 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-sm" :class="done()? 'bg-emerald-700':'accent-bg'">
+                  <span x-text="done()?'Selesai ✓':'Hitung · '+countForCurrent()"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="space-y-4">
+            <div class="paper rounded-2xl p-5">
+              <p class="muted text-xs font-semibold uppercase tracking-[.14em]">Sesi hari ini</p>
+              <div class="mt-3 flex items-end justify-between"><span class="text-3xl font-semibold" x-text="`${collectionDone()}/${list.length}`"></span><span class="muted pb-1 text-xs">dzikir tuntas</span></div>
+              <div class="progress-track mt-3 h-2 overflow-hidden rounded-full"><div class="progress-fill h-full rounded-full" :style="`width:${list.length?collectionDone()/list.length*100:0}%`"></div></div>
+              <p class="muted mt-3 text-xs leading-5">Poin hari ini: <strong class="accent" x-text="`${todayPoints()} poin`"></strong></p>
+            </div>
+            <div class="paper rounded-2xl p-5">
+              <p class="text-sm font-bold">Navigasi bacaan</p>
+              <div class="mt-4 flex items-center justify-between gap-3">
+                <button type="button" @click="move(-1)" :disabled="index===0" class="slide-arrow" aria-label="Dzikir sebelumnya">←</button>
+                <span class="muted text-xs" x-text="`${index+1} / ${list.length}`"></span>
+                <button type="button" @click="move(1)" :disabled="index===list.length-1" class="slide-arrow" aria-label="Dzikir berikutnya">→</button>
+              </div>
+              <div class="mt-4 flex justify-center gap-1.5" aria-label="Pilih lembar">
+                <template x-for="(item,i) in list" :key="item.id"><button @click="index=i" :aria-label="`Dzikir ${i+1}`" class="h-1.5 rounded-full transition-all" :class="i===index?'w-6 accent-bg':'w-1.5 soft'"></button></template>
+              </div>
+            </div>
+            <p class="px-1 text-[11px] leading-5 muted">Hitungan dan poin tersimpan otomatis di perangkat ini.</p>
+          </aside>
+        </section>
+        <p class="muted mt-6 text-center text-[11px] leading-5">Gunakan tanda kiri/kanan untuk berpindah halaman · Setiap bacaan dilengkapi rujukan.</p>
+      </main>
+
+      <main x-show="tab==='report'" x-cloak x-transition.opacity>
+        <section class="mb-6"><p class="accent mb-2 text-xs font-bold uppercase tracking-[.2em]">Konsistensi dalam sepekan</p><h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">Laporan mingguan</h1><p class="muted mt-3 text-sm">Ringkasan bacaan yang tercatat di perangkat ini.</p></section>
+        <section class="grid gap-4 sm:grid-cols-3">
+          <div class="paper rounded-2xl p-5"><p class="muted text-xs font-semibold uppercase tracking-wider">Total poin pekan ini</p><p class="accent mt-3 text-3xl font-semibold" x-text="`${weekPoints()} poin`"></p></div>
+          <div class="paper rounded-2xl p-5"><p class="muted text-xs font-semibold uppercase tracking-wider">Dzikir selesai</p><p class="mt-3 text-3xl font-semibold" x-text="weekCompleted()"></p></div>
+          <div class="paper rounded-2xl p-5"><p class="muted text-xs font-semibold uppercase tracking-wider">Hari aktif</p><p class="mt-3 text-3xl font-semibold" x-text="`${activeDays()} / 7`"></p></div>
+        </section>
+        <section class="paper mt-5 rounded-[28px] p-5 sm:p-8">
+          <div class="mb-5 flex items-center justify-between"><h2 class="font-semibold">Senin – Minggu</h2><span class="muted text-xs" x-text="weekLabel()"></span></div>
+          <div class="space-y-3">
+            <template x-for="day in weekRows()" :key="day.key"><div class="flex items-center gap-3 rounded-xl px-3 py-3 soft"><span class="w-24 text-sm font-semibold" x-text="day.label"></span><div class="progress-track h-2 flex-1 overflow-hidden rounded-full"><div class="progress-fill h-full rounded-full" :style="`width:${Math.min(100,day.points/maxPoints()*100)}%`"></div></div><span class="w-24 text-right text-xs muted" x-text="`${day.done} selesai · ${day.points} pt`"></span></div></template>
+          </div>
+          <p class="muted mt-5 text-xs leading-5">Poin dihitung dari bacaan yang mencapai jumlah pengulangan pada kartu. Ini hanya pengingat kebiasaan, bukan penetapan pahala syar'i.</p>
+        </section>
+      </main>
+
+      <footer class="muted mt-10 border-t pt-5 text-center text-[11px] leading-5" style="border-color:var(--line)">Wird · Pengingat dzikir berdasarkan tuntunan Nabi ﷺ. Untuk koreksi ilmiah, rujuk kitab hadis dan penjelasan ulama.</footer>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
+
+

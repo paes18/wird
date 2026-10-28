@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 736 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <pattern id="calligraphy" width="520" height="390" patternUnits="userSpaceOnUse" patternTransform="rotate(-8)">
+      <rect width="520" height="390" fill="#fbfbfb"/>
+      <g fill="#dddddd" opacity=".58" font-family="Amiri, 'Noto Naskh Arabic', serif" font-weight="700" direction="rtl">
+        <text x="500" y="112" font-size="102">الحمد لله</text>
+        <text x="280" y="235" font-size="126">الله أكبر</text>
+        <text x="510" y="356" font-size="96">سبحان الله</text>
+      </g>
+      <g fill="none" stroke="#e6e6e6" stroke-width="3" opacity=".62">
+        <path d="M0 44 C84 5 146 95 220 50 S370 15 520 68"/>
+        <path d="M-45 300 C60 255 144 340 250 296 S410 250 560 315"/>
+        <path d="M35 0 C82 72 28 122 90 180 S138 282 92 390"/>
+      </g>
+      <g fill="#e3e3e3" opacity=".58">
+        <path d="M40 188l13-13 13 13-13 13zM465 178l12-12 12 12-12 12zM324 24l9-9 9 9-9 9zM405 365l10-10 10 10-10 10z"/>
+        <circle cx="188" cy="340" r="5"/><circle cx="350" cy="145" r="4"/><circle cx="96" cy="72" r="4"/>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="736" height="900" fill="url(#calligraphy)"/>
+  <rect width="736" height="900" fill="#fff" opacity=".02"/>
+</svg>
