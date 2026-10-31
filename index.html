@@ -98,8 +98,8 @@
               <span class="soft rounded-full px-3 py-1.5 text-xs font-semibold" x-text="`Baca ${current().target}×`"></span>
             </div>
             <article :key="period+'-'+index+'-'+slideDirection" class="page-enter relative z-10" :class="slideDirection==='next'?'page-next':'page-prev'">
-              <p class="arabic mb-5 text-right text-[2rem] sm:text-[2.6rem]" x-text="current().arabic" lang="ar"></p>
-              <p class="mb-4 text-sm italic leading-7 muted" x-text="current().latin"></p>
+              <p class="arabic mb-5 text-right text-[2rem] sm:text-[2.6rem]" :class="current().id==='evening-2'?'arabic-three-surahs':''" x-text="current().arabic" lang="ar"></p>
+              <p class="transliteration mb-4 text-sm italic leading-7 muted" x-text="current().latin"></p>
               <div class="line mb-4 border-t"></div>
               <p class="text-[15px] leading-7" x-text="current().meaning"></p>
               <div class="soft mt-5 rounded-2xl p-4">
